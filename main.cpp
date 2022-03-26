@@ -6,32 +6,12 @@
 #include <sys/wait.h>
 using namespace std;
 
-/*void  stringArr_to_charArr(char *output[255], string input)
-{//Not sure if this function works
-    int i,j=0; //counter for input arguments.
-    int position=0;
-    for (i=0; input[i]!='\0' && input[i]!='\n'; i++)
-    {
-        if (input[i]==' ')
-        {
-            strcpy(output[j], input.substr(position, i-1).c_str());
-            position=i+1;
-            j++;
-        }
-    }
-
-    //Adding the last argument
-    strcpy(output[j++], input.substr(position,i).c_str());
-    //Adding a NULL address in the end of the output
-    *output[j]=NULL;
-}*/
-
 char **stringArr_to_charArr(string input, int *words_num)
 {
     char **output = (char **)calloc(16, sizeof(char *));
     int i = 0, j = 0, pos = 0, size = input.length();
     string debugString;
-    //         0123456789abcdefgh"
+    //          0123456789abcdefgh
     // input = "This is an example"
     for (i = 0; i <= size; i++)
     {
@@ -58,7 +38,7 @@ int main()
     string command;
     // char commandArguments[0x10][0xFF];
     char **commandArguments = NULL; // Dynamically allocating a 2D array, the C++ way
-    char *x[10] = {"pwd", NULL};
+    char *x[2] = {"pwd", NULL};
     /*
     parent =17;
 
@@ -66,14 +46,15 @@ int main()
     child1=1;
 
     */
-   int flag=0;
+    int flag = 0;
     while (1)
     {
-        Line_Input="0";
+        Line_Input = "0";
 
-        cout << "Current Directory: " << endl << '\b';
+        cout << "Current Directory: " << endl
+             << '\b';
         process_id = fork();
-        if (process_id == 0) // means child 
+        if (process_id == 0) // means child
         {
             execvp("pwd", x);
             exit(0);
@@ -84,7 +65,7 @@ int main()
         // 1. Check if the input from user was "exit"
         getline(cin, Line_Input);
         char check = Line_Input.back();
-        //int lastCharacterP = Line_Input.end();; 
+        // int lastCharacterP = Line_Input.end();;
 
         if (Line_Input == "exit")
             break;
@@ -101,13 +82,14 @@ int main()
         //"cd" "/home/kurama/Downloads"
         if (process_id == 0)
         {
-            if (command=="cd")
+            if (command == "cd")
             {
-                chdir (*((commandArguments)+1));
-                flag=1;
+                chdir(*((commandArguments) + 1));
+                flag = 1;
                 cout << "Directory changed\n\n";
 
-                if (process_id!=0)  exit(0);
+                if (process_id != 0)
+                    exit(0);
             }
             else
             {
@@ -120,10 +102,9 @@ int main()
             cout << "Waiting\n";
             wait(NULL);
         }
-        //if (flag!=0) exit(0);
-        // Testing Area
-        // TODO: Free commandArguments
+        // if (flag!=0) exit(0);
 
+        // Free commandArgumentf from memory
         for (int i = 0; i < wordSize; i++)
             free(*(commandArguments + i));
 
