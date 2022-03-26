@@ -11,7 +11,7 @@ char **stringArr_to_charArr(string input, int *words_num)
     char **output = (char **)calloc(16, sizeof(char *));
     int i = 0, j = 0, pos = 0, size = input.length();
     string debugString;
-    //          0123456789abcdefgh
+    //          0123456789abcdefgh.com
     // input = "This is an example"
     for (i = 0; i <= size; i++)
     {
