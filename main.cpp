@@ -25,7 +25,7 @@ void  stringArr_to_charArr(char *output[255], string input)
     //Adding a NULL address in the end of the output
     *output[j]=NULL;
 }
-//lmao eks dee
+
 int main()
 {
     int process_id;
