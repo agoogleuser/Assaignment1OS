@@ -29,6 +29,17 @@ char **stringArr_to_charArr(string input, int *words_num)
     return output;
 }
 
+bool check_and_symbol(string input)
+{
+    for (int i=input.length()-1; i>=0; i--)
+    {
+        if (input[i]== ' ') continue;
+        if (input[i]== '&') return true;
+        else                 break;
+    }
+    return false;
+}
+
 int main()
 {
     int process_id;
@@ -48,7 +59,11 @@ int main()
 
         // 0. Getting Input Buffer from the user in the terminal.
         getline(cin, Line_Input);
-        char check = Line_Input.back(); //
+        bool check = check_and_symbol(Line_Input); //check if there was an & at the end of the line
+        if (check==true){
+            Line_Input.erase(Line_Input.find_last_of('&')); //removes &
+            Line_Input.erase(Line_Input.end()-1);//removes extra space.
+        }
        
         // 1. Check if the input from user was "exit"
         if (Line_Input == "exit")   break;
@@ -71,9 +86,8 @@ int main()
             execvp(command.c_str(), commandArguments);
             exit(0);
         }
-        else if (process_id != 0 && check != '&')
+        else if (process_id != 0 && check == false)
         {//Parent process goes here
-            //cout << "Waiting\n";  //used for debugger only, remove it for release.
             wait(NULL); //Wait for all children to die. (don't take this comment literally pls)
         }
 FreeStuff:
