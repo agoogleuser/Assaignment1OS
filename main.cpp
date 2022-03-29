@@ -11,7 +11,7 @@ char **stringArr_to_charArr(string input, int *words_num)
     char **output = (char **)calloc(16, sizeof(char *));
     int i = 0, j = 0, pos = 0, size = input.length();
     string debugString;
-    //          0123456789abcdefgh.com
+    //          0123456789abcdefgh
     // input = "This is an example"
     for (i = 0; i <= size; i++)
     {
@@ -33,84 +33,56 @@ int main()
 {
     int process_id;
     int wordSize;
-
     string Line_Input;
     string command;
-    // char commandArguments[0x10][0xFF];
-    char **commandArguments = NULL; // Dynamically allocating a 2D array, the C++ way
-    char *x[2] = {"pwd", NULL};
-    /*
-    parent =17;
+    char currentDirectory[0xFF];
+    char **commandArguments = NULL;
+    bool exitFlag=0;
 
-    fork
-    child1=1;
-
-    */
-    int flag = 0;
+    cout << "Starting our basic shell:\n++++++++++++++++++++++++++\n";
     while (1)
     {
-        Line_Input = "0";
+        Line_Input = "0";//resets the input buffer.
+        getcwd(currentDirectory, 0xFF);
+        cout << currentDirectory << "$ "; 
 
-        cout << "Current Directory: " << endl
-             << '\b';
-        process_id = fork();
-        if (process_id == 0) // means child
-        {
-            execvp("pwd", x);
-            exit(0);
-        }
-        else
-            wait(NULL);
-
-        // 1. Check if the input from user was "exit"
         getline(cin, Line_Input);
         char check = Line_Input.back();
-        // int lastCharacterP = Line_Input.end();;
+       
+        // 1. Check if the input from user was "exit"
+        if (Line_Input == "exit")   break;
 
-        if (Line_Input == "exit")
-            break;
-
-        // If not,
-        // 2. The program will split the input to many strings in
-        // order to use the input as an input in execvp()
-
+        // 2. Split the input biffer using the following two lines
         command.assign(Line_Input.substr(0, Line_Input.find(" ")));
-
         commandArguments = stringArr_to_charArr(Line_Input, &wordSize);
-        char **output = (char **)calloc(16, sizeof(char *));
-        process_id = fork();
-        //"cd" "/home/kurama/Downloads"
-        if (process_id == 0)
-        {
-            if (command == "cd")
-            {
-                chdir(*((commandArguments) + 1));
-                flag = 1;
-                cout << "Directory changed\n\n";
 
-                if (process_id != 0)
-                    exit(0);
-            }
-            else
-            {
-                execvp(command.c_str(), commandArguments);
-                exit(0);
-            }
+        // 3. Check if the input was "cd"
+        if (command == "cd")
+        {
+            chdir(*((commandArguments) + 1));
+            continue;//restarts the loop.
+        }
+        
+        //Executing General commands
+        process_id = fork();
+        if (process_id == 0)
+        {//Child Process goes here.
+            execvp(command.c_str(), commandArguments);
+            exit(0);
         }
         else if (process_id != 0 && check != '&')
-        {
-            cout << "Waiting\n";
-            wait(NULL);
+        {//Parent process goes here
+            //cout << "Waiting\n";
+            wait(NULL); //Wait for all children to die. (don't take this comment literally pls)
         }
-        // if (flag!=0) exit(0);
 
-        // Free commandArgumentf from memory
+        // Free commandArgumentf from memory every loop.
         for (int i = 0; i < wordSize; i++)
             free(*(commandArguments + i));
 
         free(commandArguments);
     }
-    cout << "Exiting...\n\n";
 
+    cout << "Exiting...\n+++++++++++++++++++++++++++++++++++++++++++++\n";
     return 0;
 }
