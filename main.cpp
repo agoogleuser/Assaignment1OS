@@ -7,6 +7,7 @@
 using namespace std;
 
 //Global Variables
+string Line_Input;  //User Input buffer
 pid_t process_id;
 short process_counter = 0;
 ofstream logFile(".log.txt");
@@ -43,7 +44,8 @@ void handler(int num)
 {//Function that automaticaly operates when a child process dies.
     process_counter--;
     static int currentLine = 1;
-    logFile <<currentLine++ <<"| Child [" << process_id <<"] Died, RIP! :(\n";
+    logFile << "command:\t" << Line_Input <<'\n';
+    logFile << currentLine++ <<"| Child [" << process_id <<"] Died, RIP! :(\n\n";
     //Saves this output in .log.txt file, which is hidden by default for linux.
 }
 
@@ -70,7 +72,6 @@ int main()
     bool check;
     int process_status=0;
     int wordSize;       //Stores the Number of arguments in each input
-    string Line_Input;  //User Input buffer
     string command;     //First Input Argument
     char currentDirectory[0xFF]; //Stores the current directory in a C string
     char **commandArguments = NULL; //Stores the user input to use in execvp();
@@ -146,6 +147,7 @@ int main()
         
     }
     cout << "Exiting...\n+++++++++++++++++++++++++++++++++++++++++++++\n";
+    logFile.close();
     kill(0, SIGKILL); //Kills all children of the main process.
     return 0;
 }
