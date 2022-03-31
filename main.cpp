@@ -1,10 +1,16 @@
-// main C code is written here:
-
 #include <iostream>
+#include <fstream>
 #include <unistd.h> //Has the Fork() and w
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 using namespace std;
+
+bool check;
+pid_t process_id;
+int process_status=0;
+ofstream logFile(".log.txt");
+
 
 char **stringArr_to_charArr(string input, int *words_num)
 {
@@ -40,26 +46,36 @@ bool check_and_symbol(string input)
     return false;
 }
 
+void handler(int num)
+{
+    static int currentLine = 1;
+    logFile <<currentLine++ <<"| Child [" << process_id <<"] Died, RIP! :(\n";
+}
+
 int main()
 {
-    int process_id;
     int wordSize;
     string Line_Input;
     string command;
     char currentDirectory[0xFF]; //Stores the current directory string
-    char **commandArguments = NULL;
+    char **commandArguments = NULL; //Stores the user input to use in execvp();
     bool exitFlag=0;
+
+    signal (SIGCHLD, handler);
 
     cout << "Starting our basic shell:\n++++++++++++++++++++++++++\n";
     while (1)
     {
-        Line_Input = "0";//resets the input buffer.
+        check = false;
+        Line_Input = "";//resets the input buffer.
+        command = "";
+     
         getcwd(currentDirectory, 0xFF); //Calls a system function to get the current working directory.
-        cout << currentDirectory << "$ "; 
+        cout << endl << currentDirectory << "$ "; 
 
         // 0. Getting Input Buffer from the user in the terminal.
         getline(cin, Line_Input);
-        bool check = check_and_symbol(Line_Input); //check if there was an & at the end of the line
+        check = check_and_symbol(Line_Input); //check if there was an & at the end of the line
         if (check==true){
             Line_Input.erase(Line_Input.find_last_of('&')); //removes &
             Line_Input.erase(Line_Input.end()-1);//removes extra space.
@@ -74,22 +90,24 @@ int main()
 
         // 3. Check if the input was "cd"
         if (command == "cd")
-        {
             chdir(*((commandArguments) + 1));
-            goto FreeStuff;//restarts the loop.
+
+        else
+        {//4. Executing General commands
+            process_id = fork();
+            if (process_id == 0)
+            {//Child Process goes here.
+                execvp(command.c_str(), commandArguments);
+            }
+            else if (process_id > 0)
+            {//Parent process goes here
+                if (check==false)                
+                    waitpid(process_id,&process_status ,0); //Wait for all children to die. (don't take this comment literally pls)
+                else
+                    cout << '[' << process_id << "]+1\n";
+            }
         }
-        
-        //Executing General commands
-        process_id = fork();
-        if (process_id == 0)
-        {//Child Process goes here.
-            execvp(command.c_str(), commandArguments);
-            exit(0);
-        }
-        else if (process_id != 0 && check == false)
-        {//Parent process goes here
-            wait(NULL); //Wait for all children to die. (don't take this comment literally pls)
-        }
+
 FreeStuff:
         // Free commandArgumentf from memory every loop.
         for (int i = 0; i < wordSize; i++)
@@ -97,7 +115,6 @@ FreeStuff:
 
         free(commandArguments);
     }
-
     cout << "Exiting...\n+++++++++++++++++++++++++++++++++++++++++++++\n";
     return 0;
 }
