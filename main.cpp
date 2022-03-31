@@ -7,7 +7,6 @@
 using namespace std;
 
 //Global Variables
-string Line_Input;  //User Input buffer
 pid_t process_id;
 short process_counter = 0;
 ofstream logFile(".log.txt");
@@ -43,9 +42,7 @@ char **stringArr_to_charArr(string input, int *words_num)
 void handler(int num)
 {//Function that automaticaly operates when a child process dies.
     process_counter--;
-    static int currentLine = 1;
-    logFile << "command:\t" << Line_Input <<'\n';
-    logFile << currentLine++ <<"| Child [" << process_id <<"] Died, RIP! :(\n\n";
+    logFile <<"| Child [" << process_id <<"] Finished Execution. \n\n";
     //Saves this output in .log.txt file, which is hidden by default for linux.
 }
 
@@ -72,6 +69,7 @@ int main()
     bool check;
     int process_status=0;
     int wordSize;       //Stores the Number of arguments in each input
+    string Line_Input;  //User Input buffer
     string command;     //First Input Argument
     char currentDirectory[0xFF]; //Stores the current directory in a C string
     char **commandArguments = NULL; //Stores the user input to use in execvp();
@@ -92,10 +90,11 @@ int main()
 
         // 0.  Getting Input Buffer from the user in the terminal.
         getline(cin, Line_Input);
-
         // 0.1 Remove extra spaces from the input
         Line_Input = remove_extra_spaces(Line_Input); 
-        // 0.2 check if there was an '&' at the end of the line
+        // 0.2 Stores The Line input (after fixing it) into a log file
+        logFile << "command: \"" << Line_Input <<"\"\n";
+        // 0.3 check if there was an '&' at the end of the line
         check = (Line_Input.back()=='&')?true:false;
         if (check==true){
             Line_Input.erase(Line_Input.find_last_of('&')); //removes '&'
@@ -109,6 +108,7 @@ int main()
 
         command.assign(Line_Input.substr(0, Line_Input.find(" ")));
         // 2.1 If it was an 'sudo' command, Add "-S" in front of it.
+        // This is because it requres a standard input for some reason.
         if (command == "sudo")
             Line_Input.insert(4," -S");
 
@@ -121,7 +121,7 @@ int main()
         else
         {//4.  Executing General commands
             process_id = fork();
-            process_counter++;
+            process_counter++; //Assuming new fork was created successfully;
             if (process_id == 0)
             //Child Process goes here.
                 execvp(command.c_str(), commandArguments);
@@ -132,7 +132,7 @@ int main()
                     waitpid(process_id,&process_status ,0);
                     //Wait for all children to die. (don't take this comment literally pls)
                 else
-                    cout << '[' << process_id << "]+1\n";
+                    logFile << '[' << process_id << "] + " << process_counter << "\tis Working In Background.\n";
             }
         }
 
