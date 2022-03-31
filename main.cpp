@@ -8,6 +8,7 @@ using namespace std;
 
 //Global Variables
 pid_t process_id;
+int process_status=0;
 short process_counter = 0;
 ofstream logFile(".log.txt");
 
@@ -41,8 +42,9 @@ char **stringArr_to_charArr(string input, int *words_num)
 
 void handler(int num)
 {//Function that automaticaly operates when a child process dies.
+    pid_t childPID = waitpid(-1, &process_status, WNOHANG);
     process_counter--;
-    logFile <<"| Child [" << process_id <<"] Finished Execution. \n\n";
+    logFile <<"| Child [" << childPID <<"] Finished Execution. \n\n";
     //Saves this output in .log.txt file, which is hidden by default for linux.
 }
 
@@ -67,13 +69,11 @@ string remove_extra_spaces(string input)
 int main()
 {
     bool check;
-    int process_status=0;
     int wordSize;       //Stores the Number of arguments in each input
     string Line_Input;  //User Input buffer
     string command;     //First Input Argument
     char currentDirectory[0xFF]; //Stores the current directory in a C string
     char **commandArguments = NULL; //Stores the user input to use in execvp();
-    bool exitFlag=0;
 
     signal (SIGCHLD, handler);
 
