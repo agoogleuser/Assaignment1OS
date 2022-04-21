@@ -73,20 +73,23 @@ int main()
     string Line_Input;  //User Input buffer
     string command;     //First Input Argument
     char currentDirectory[0xFF]; //Stores the current directory in a C string
+    char userName[0x20];//getlogin_r(userName, 0x20);
+    cuserid(userName);
     char **commandArguments = NULL; //Stores the user input to use in execvp();
 
     signal (SIGCHLD, handler);
-
     cout << "Starting our basic shell:\n++++++++++++++++++++++++++\n";
+
     while (1)
     {
+        //Initializing variables every loop.
         check = false;
         wordSize=0;
-        Line_Input = "";//resets the input buffer.
+        Line_Input = "";
         command = "";
      
         getcwd(currentDirectory, 0xFF); //Calls a system function to get the current working directory.
-        cout << endl << currentDirectory << "$ "; 
+        cout << endl << userName << ':' << currentDirectory << "$ "; 
 
         // 0.  Getting Input Buffer from the user in the terminal.
         getline(cin, Line_Input);
@@ -104,7 +107,7 @@ int main()
         // 1.  Check if the input from user was "exit"
         if (Line_Input == "exit")   break;
 
-        // 2.  Split the input biffer using the following two lines
+        // 2.  Split the input buffer using the following lines
 
         command.assign(Line_Input.substr(0, Line_Input.find(" ")));
         // 2.1 If it was an 'sudo' command, Add "-S" in front of it.
@@ -114,7 +117,8 @@ int main()
 
         commandArguments = stringArr_to_charArr(Line_Input, &wordSize);
 
-        // 3.  Check if the input was "cd"
+        // 3.  Check if the input was "cd", It will change the working directory
+        //     for the parent process.
         if (command == "cd")
             chdir(*((commandArguments) + 1));
 
@@ -130,21 +134,24 @@ int main()
             {//Parent process goes here
                 if (check==false)                
                     waitpid(process_id,&process_status ,0);
-                    //Wait for all children to die. (don't take this comment literally pls)
+                    //Wait for the last child to die. (don't take this comment literally pls)
                 else
                     logFile << '[' << process_id << "] + " << process_counter << "\tis Working In Background.\n";
             }
+            else
+            {//In case a process was not created.
+                process_counter--;
+                printf("A new process can't be created. Please try again.\nIf the issue still exists please free some memory from your system");
+            }
         }
-
         //5.  Free commandArgumentf from memory every loop.
         for (int i = 0; i < wordSize; i++)
             free(*(commandArguments + i));
 
         free(commandArguments);
 
-        //If something wrong happens, Force quit the program
-        if (process_counter >= 10) break;
-        
+        //If something wrong happens, Force quit the program.
+        if (process_counter >= 10) break;       
     }
     cout << "Exiting...\n+++++++++++++++++++++++++++++++++++++++++++++\n";
     logFile.close();
